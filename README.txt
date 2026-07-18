@@ -1,5 +1,5 @@
 ================================================================================
- Fixing the built-in SD card reader on this machine (Windows 10)
+ Fixing the built-in SD card reader on this machine
 ================================================================================
 
   *** STATUS: INSTALLED & WORKING (2026-07-04) ***
@@ -27,10 +27,42 @@ warning triangle (look under "Other devices").
 
 WHY IT HAS NO DRIVER
 --------------------
-The chip reports PCI class code 08 80 ("Base System Peripheral / Other")
-instead of the standard SD host-controller class 08 05 01. Windows binds SD
-readers by that standard class code, so it never claims this chip -- even
-though the driver it needs (sdbus.sys) is already installed on your disk.
+Windows binds a driver to a device by matching EITHER an exact hardware ID
+listed in some INF, OR a PCI class code. This device misses both:
+
+  * No hardware ID match. Nothing in any catalog Windows consults declares
+    PCI\VEN_1180&DEV_E822. Notably, Microsoft's in-box sdbus.inf DOES have a
+    [Ricoh.NTamd64] section -- but it covers DEV_0822, not DEV_E822.
+    (Verified by reading C:\Windows\INF\sdbus.inf on this machine.)
+
+  * No class code match. sdbus.inf's [Generic.NTamd64] section binds any
+    device advertising PCI class 08 05 01 (SD Host Controller). That generic
+    fallback is what rescues most no-name SD readers. This chip advertises
+    class 08 80 ("Base System Peripheral / Other") instead, so it misses the
+    safety net too.
+
+So the driver it needs (sdbus.sys) is already sitting on your disk, signed by
+Microsoft -- Windows just has no rule that connects the two.
+
+WHY NOTHING AUTOMATIC FIXES IT
+------------------------------
+This also explains why no automated source supplies the driver. Three
+different mechanisms all fail, for three different reasons, all rooted in the
+fact that Lenovo never validated the T420 for Windows 10:
+
+  * Not listed on Lenovo's site for this machine. Lenovo's downloads are a
+    lookup of machine-type x OS. There is no Windows 10 row for 4180, so
+    searching that machine type surfaces nothing -- even though a suitable
+    package exists (see OPTION 2).
+
+  * Not found by Lenovo System Update / Vantage. Those tools query the same
+    machine-type manifest. They do not enumerate your PCI bus and reason
+    about it; they read a table that has no row for you.
+
+  * Not offered by Windows Update. WU matches by hardware ID against packages
+    published to its catalog. OEM packages like Ricoh's are distributed from
+    the vendor site and generally never pushed to WU at all -- and as above,
+    no in-box INF claims this ID either.
 
 The fix is NOT to write a new driver. It is to tell Windows to use the driver
 it already has. There are three ways, easiest first.
@@ -51,18 +83,32 @@ installed (it isn't), move on.
 
 
 --------------------------------------------------------------------------------
- OPTION 2  --  Lenovo's official Ricoh driver (most reliable, WHQL-signed)
+ OPTION 2  --  Lenovo's official Ricoh driver (vendor-signed, but see caveats)
 --------------------------------------------------------------------------------
-This is the vendor-supported driver and the safest choice.
+Lenovo DOES publish a "Ricoh Media Card Reader Driver" for Windows 10:
 
-1. Go to Lenovo support:  https://pcsupport.lenovo.com
-2. Enter machine type 4180 (ThinkPad T420), or search "T420 Ricoh card reader."
-3. Download "Ricoh Multi Card Reader Driver" (the Windows 7 64-bit package
-   installs and runs fine on Windows 10 64-bit).
-4. Run the installer, reboot, insert a card.
+    DS032126 - Ricoh Media Card Reader Driver, Windows 10 / 8 (32 & 64-bit)
+    https://support.lenovo.com/us/en/downloads/ds032126
 
-Its INF explicitly lists DEV_E822, so it will bind correctly and gives you full
-functionality and power management.
+    DS038445 - Ricoh Media Card Reader Driver, Windows 10 / 8.1 (32 & 64-bit)
+    https://support.lenovo.com/us/en/downloads/ds038445
+
+IMPORTANT: do NOT expect to find these by searching machine type 4180. The
+T420 was never validated by Lenovo for Windows 10, so it has no Windows 10
+entry; these packages are published under the ThinkPad models that WERE
+validated (T430 / X230 era). The package is real, it is simply not surfaced
+for this machine. Open the DS links above directly.
+
+UNVERIFIED: whether that package's INF actually lists DEV_E822. Our chip is
+the same Ricoh PCIe family, so it is plausible -- but it has NOT been
+confirmed. To check before installing, extract the package and search its
+.inf files for "E822":
+
+    Select-String -Path <extracted folder>\*.inf -Pattern 'E822'
+
+If DEV_E822 appears, this is the better long-term choice than OPTION 3: it is
+vendor-signed and may bring fuller power management. If it does NOT appear,
+the package will not bind to this device and OPTION 3 is your answer.
 
 
 --------------------------------------------------------------------------------
