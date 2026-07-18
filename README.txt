@@ -1,5 +1,5 @@
 ================================================================================
- Fixing the built-in SD card reader on this machine
+ Fixing the built-in SD card reader on this machine (Windows 10)
 ================================================================================
 
   *** STATUS: INSTALLED & WORKING (2026-07-04) ***
