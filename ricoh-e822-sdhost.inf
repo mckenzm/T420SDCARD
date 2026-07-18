@@ -1,0 +1,62 @@
+; ============================================================================
+; ricoh-e822-sdhost.inf
+;
+; Binds the built-in Ricoh PCIe SDXC/MMC card-reader controller
+; (PCI\VEN_1180&DEV_E822) to the Windows in-box SD Host Controller driver,
+; sdbus.sys.
+;
+; WHY THIS IS NEEDED
+;   This controller reports PCI class code 08 80 01 ("Base System Peripheral /
+;   Other") instead of the standard SD Host Controller class 08 05 01. Because
+;   of that mis-reported class, Windows never matches it to its built-in
+;   sdbus.sys driver, so the slot shows up unconfigured as "Base System Device"
+;   with error code 28 ("The drivers for this device are not installed").
+;
+;   This INF adds an explicit match on the Ricoh hardware ID and reuses the
+;   very same install sections Microsoft's in-box sdbus.inf already defines for
+;   Ricoh controllers -- including the Ricoh-specific CardPresenceCheckDelay
+;   tuning. It introduces NO new binary: it points at Microsoft's already-
+;   signed sdbus.sys, which implements the standard SD Host Controller spec.
+;
+; TARGET
+;   Windows 10 / 11, 64-bit only (the in-box sdbus.inf is NTamd64-only).
+;   Verified against the device on a Lenovo ThinkPad T420 (machine type 4180).
+; ============================================================================
+
+[Version]
+Signature = "$WINDOWS NT$"
+Class     = SDHost
+ClassGUID = {a0a588a4-c46f-4b37-b7ea-c82fe89870c6}
+Provider  = %Provider%
+DriverVer = 07/04/2026,1.0.0.0
+
+[Manufacturer]
+%Ricoh% = Ricoh, NTamd64
+
+; Most specific match (this exact Lenovo subsystem) first, then a generic
+; fallback that matches the Ricoh E822 on any board.
+[Ricoh.NTamd64]
+%DeviceDesc% = SDHostRicohE822, PCI\VEN_1180&DEV_E822&SUBSYS_213317AA
+%DeviceDesc% = SDHostRicohE822, PCI\VEN_1180&DEV_E822
+
+; ---------------------------------------------------------------------------
+; Reuse the in-box sdbus.inf Ricoh install sections. "Include" pulls in the
+; system sdbus.inf; "Needs" runs its named sections (CopyFiles for sdbus.sys,
+; AddService for the sdbus kernel service, and the Ricoh HW tuning).
+; ---------------------------------------------------------------------------
+[SDHostRicohE822.NT]
+Include = sdbus.inf
+Needs   = SDHostRicoh
+
+[SDHostRicohE822.NT.Services]
+Include = sdbus.inf
+Needs   = SDHostRicoh.Services
+
+[SDHostRicohE822.NT.HW]
+Include = sdbus.inf
+Needs   = SDHostRicoh.HW
+
+[Strings]
+Provider   = "Manual bind (community)"
+Ricoh      = "Ricoh"
+DeviceDesc = "Ricoh PCIe SDXC/MMC Host Controller (E822)"
