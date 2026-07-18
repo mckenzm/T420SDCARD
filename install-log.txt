@@ -1,0 +1,29 @@
+﻿Ricoh E822 elevated install  -  07/04/2026 12:35:25
+12:35:25  Elevated: True
+12:35:25  Creating temporary self-signed code-signing certificate...
+12:35:27    Thumbprint: 7422EF9E880A00D2FF0AEFA45DF78DEBE47FF95E
+12:35:27  Generating catalog (New-FileCatalog, SHA256)...
+12:35:27    Catalog present: True
+12:35:27  Signing catalog...
+12:35:27    Signature status: UnknownError
+12:35:27  Adding signer to LocalMachine Root + TrustedPublisher (temporary)...
+12:35:27  Running: pnputil /add-driver /install ...
+12:35:28  pnputil exit code: 0
+12:35:28  pnputil stdout:
+Microsoft PnP Utility
+
+Adding driver package:  ricoh-e822-sdhost.inf
+Driver package added successfully. (Already exists in the system)
+Published Name:         oem14.inf
+Driver package installed on device: PCI\VEN_1180&DEV_E822&SUBSYS_213317AA&REV_08\4&245f9d90&0&00E4
+
+Total driver packages:  1
+Added driver packages:  1
+
+12:35:30  Device now : Name=''  ErrorCode=  Service=''
+12:35:30  RESULT: NOT BOUND - still error code .
+12:35:30  Cleaning up temporary certificate from all stores...
+12:35:30    removed from LocalMachine\My
+12:35:30    removed from LocalMachine\Root
+12:35:30    removed from LocalMachine\TrustedPublisher
+12:35:30  Done.
